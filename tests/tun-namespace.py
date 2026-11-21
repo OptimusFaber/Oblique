@@ -57,6 +57,11 @@ try:
     before4=output('ip','rule','show');before6=output('ip','-6','rule','show')
     with tempfile.TemporaryDirectory(prefix='oblique-tun-',dir='/home') as tmp:
         temp=pathlib.Path(tmp)
+        # The network namespace has no system resolver. Point its libc resolver
+        # at the test DNS endpoint; the TUN DNS-hijack rule must handle the query.
+        resolver=temp/'resolv.conf'
+        resolver.write_text('nameserver 192.0.2.2\noptions timeout:2 attempts:1\n')
+        run('mount','--bind',str(resolver),'/etc/resolv.conf')
         upstream={'log':{'level':'info'},'inbounds':[{'type':'vless','tag':'test-server','listen':'192.0.2.2','listen_port':18443,'users':[{'uuid':UUID}]}],'outbounds':[{'type':'direct','tag':'direct'}],'route':{'final':'direct'}}
         (temp/'server.json').write_text(json.dumps(upstream))
         log=open(temp/'server.log','w+')
