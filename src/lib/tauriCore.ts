@@ -5,6 +5,8 @@ export async function coreCall<T>(command: string, args?: Record<string, unknown
   return invoke<T>(command, args)
 }
 export const tauriStartCore = (configJson: string, useProxy: boolean, bypassLan: boolean) => coreCall('core_start', { configJson, useProxy, bypassLan })
+export const setNativeWindowMode = (compact: boolean) => coreCall('set_window_mode', { compact })
 export const tauriStopCore = () => coreCall<void>('core_stop')
 export const tauriCoreHint = () => isDesktopApp() ? coreCall<string>('core_hint') : Promise.resolve('Предпросмотр интерфейса. VPN доступен в desktop-приложении Oblique.')
 export const tauriTcpPingMs = (host: string, port: number) => coreCall<number>('tcp_ping_ms', { host, port })
+export const tauriDetectCountry = (host: string) => coreCall<string | null>('detect_country', { host })

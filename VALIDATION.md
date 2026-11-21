@@ -1,5 +1,19 @@
 # Проверка Oblique 2.1.0
 
+## Интерфейс и значок Windows, 21 ноября 2026
+
+| Проверка | Результат |
+| --- | --- |
+| Компактная ширина 420 px и полная 1100 px | PASS: визуально проверены браузерные снимки с синтетическим сервером; навигация и список не требуют горизонтальной прокрутки |
+| `npm run lint`, `npm run build`, `npm test` | PASS: lint без ошибок, TypeScript/Vite собраны, 12/12 unit |
+| `npm run test:ui` | PASS: 5/5 браузерных сценариев; не проверяет нативный Windows tray |
+| `npm run test:core` | PASS: 10 сетевых сценариев с временными серверами |
+| `cargo check --locked` | PASS после добавления tray API; одно прежнее предупреждение о неиспользуемых методах |
+| Windows tray, зелёный индикатор, NSIS и Defender | NOT RUN локально: требуется Windows runner/реальный Windows-сеанс |
+| Текущий Linux TUN namespace | NOT RUN: `unshare: Operation not permitted`, `sudo -n` требует пароль |
+| Живое подключение к пользовательскому VPN и восстановление Windows proxy | NOT RUN: нет Windows-сеанса и приватного профиля |
+
+
 ## Локальная сборка на Ubuntu 22.04, 21 ноября 2026
 
 | Проверка | Результат |

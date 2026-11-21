@@ -46,6 +46,8 @@ export function SettingsTab() {
     busy,
     advanced,
     setAdvanced,
+    compactWindow,
+    setCompactWindow,
   } = useApp()
   const [advOpen, setAdvOpen] = useState(false)
 
@@ -70,6 +72,15 @@ export function SettingsTab() {
       <p className="text-[11px] leading-snug text-neutral-500 dark:text-neutral-400">
         {t(lang, 'themeSettingsNote')}
       </p>
+
+      <div className="space-y-2">
+        <p className="text-xs font-semibold text-neutral-600 dark:text-neutral-300">{lang === 'ru' ? 'Окно приложения' : 'Application window'}</p>
+        <div className="grid grid-cols-2 gap-2">
+          <button type="button" aria-pressed={!compactWindow} onClick={() => setCompactWindow(false)} className={'rounded-xl border px-3 py-3 text-sm font-semibold ' + (!compactWindow ? 'border-orange-500 bg-orange-50 dark:bg-orange-950/30' : 'border-neutral-200 dark:border-neutral-800')}>{lang === 'ru' ? 'Полное окно' : 'Full window'}</button>
+          <button type="button" aria-pressed={compactWindow} onClick={() => setCompactWindow(true)} className={'rounded-xl border px-3 py-3 text-sm font-semibold ' + (compactWindow ? 'border-orange-500 bg-orange-50 dark:bg-orange-950/30' : 'border-neutral-200 dark:border-neutral-800')}>{lang === 'ru' ? 'Компактное' : 'Compact'}</button>
+        </div>
+        <p className="text-[11px] leading-snug text-neutral-500 dark:text-neutral-400">{lang === 'ru' ? 'Компактный режим — узкое вертикальное окно для быстрого подключения.' : 'Compact mode uses a narrow vertical window for quick connection.'}</p>
+      </div>
 
       <label className="block text-xs font-medium text-neutral-500 dark:text-neutral-400">
         <span className="mb-1 flex items-center gap-2">

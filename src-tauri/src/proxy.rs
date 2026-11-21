@@ -28,16 +28,19 @@ pub fn restore(path: &Path) -> Result<(), String> {
         use std::process::Stdio;
         use std::os::windows::process::CommandExt;
         let script = r#"[Console]::InputEncoding=[System.Text.UTF8Encoding]::new();$ErrorActionPreference='Stop';$s=[Console]::In.ReadToEnd()|ConvertFrom-Json;$k='HKCU:\Software\Microsoft\Windows\CurrentVersion\Internet Settings';foreach($n in @('ProxyEnable','ProxyServer','ProxyOverride','AutoConfigURL')){if($null -eq $s.$n){Remove-ItemProperty $k $n -ErrorAction SilentlyContinue}else{Set-ItemProperty $k $n $s.$n}}"#;
-        let mut c = Command::new("powershell.exe").args(["-NoProfile", "-NonInteractive", "-Command", script]).creation_flags(0x08000000).stdin(Stdio::piped()).stdout(Stdio::null()).spawn().map_err(|e|e.to_string())?;
+        let mut c = Command::new("powershell.exe").args(["-NoProfile", "-NonInteractive", "-Command", script]).creation_flags(0x08000000).stdin(Stdio::piped()).stdout(Stdio::null()).stderr(Stdio::piped()).spawn().map_err(|e|e.to_string())?;
         c.stdin.take().ok_or("stdin unavailable")?.write_all(text.as_bytes()).map_err(|e|e.to_string())?;
-        if !c.wait().map_err(|e|e.to_string())?.success() { return Err("Could not restore Windows proxy".into()); }
+        let output=c.wait_with_output().map_err(|e|e.to_string())?;
+        if !output.status.success() { return Err(format!("Could not restore Windows proxy; recovery snapshot was kept: {}", String::from_utf8_lossy(&output.stderr).trim())); }
         notify_windows();
     }
     #[cfg(not(windows))] {
         let entries: Vec<Entry> = serde_json::from_str(&text).map_err(|e|e.to_string())?;
-        for e in entries.iter().rev() { run("gsettings", &["set", &e.schema, &e.key, &e.value])?; }
+        for e in entries.iter().rev() {
+            if let Err(error)=run("gsettings", &["set", &e.schema, &e.key, &e.value]) { return Err(format!("{error}; recovery snapshot was kept")); }
+        }
     }
-    fs::remove_file(path).map_err(|e|e.to_string())?;
+    fs::remove_file(path).map_err(|e|format!("Could not remove recovered proxy snapshot: {e}"))?;
     Ok(())
 }
 

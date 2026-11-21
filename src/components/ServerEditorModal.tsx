@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import type { Lang, Server, ServerGroup } from '../types'
 import { normalizeServer, parseServerFromText } from '../utils/parseServer'
+import { COMMON_COUNTRY_OPTIONS } from '../utils/countryFlags'
 
 const field = 'mt-1 w-full rounded-xl border border-neutral-300 bg-white px-3 py-2 dark:border-neutral-700 dark:bg-neutral-950'
 export function ServerEditorModal({ open, onClose, initial, onSubmit, lang }: {
@@ -24,6 +25,12 @@ export function ServerEditorModal({ open, onClose, initial, onSubmit, lang }: {
         {textField('tag', ru ? 'Название' : 'Name')}
         <label className="block text-sm">{ru ? 'Протокол' : 'Protocol'}<select className={field} value={form.serverType || 'vless'} onChange={e => patch({ serverType: e.target.value })}>{['vless','vmess','trojan','shadowsocks','socks5','http','https'].map(p => <option key={p}>{p}</option>)}</select></label>
         {textField('host', ru ? 'Адрес сервера' : 'Server host')}
+        <label className="block text-sm">{ru ? 'Страна сервера' : 'Server country'}
+          <select className={field} value={form.countryCode || ''} onChange={e => patch({ countryCode: e.target.value })}>
+            <option value="">{ru ? 'Определить автоматически' : 'Detect automatically'}</option>
+            {COMMON_COUNTRY_OPTIONS.map(country => <option value={country.code} key={country.code}>{ru ? country.ru : country.en}</option>)}
+          </select>
+        </label>
         <label className="block text-sm">{ru ? 'Порт' : 'Port'}<input className={field} type="number" min={1} max={65535} value={form.port ?? 443} onChange={e => patch({ port: Number(e.target.value) })} required /></label>
         {['socks5','http','https'].includes(form.serverType || '') && textField('username', ru ? 'Пользователь' : 'Username')}
         {textField('password', ['vless','vmess'].includes(form.serverType || '') ? 'UUID' : (ru ? 'Пароль' : 'Password'), true)}

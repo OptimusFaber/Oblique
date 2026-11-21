@@ -11,15 +11,23 @@ const tabs: TabId[] = [
   'reachability',
 ]
 
+const shortLabels: Record<TabId, { ru: string; en: string }> = {
+  connection: { ru: 'Главная', en: 'Home' },
+  configs: { ru: 'Маршруты', en: 'Routing' },
+  traffic: { ru: 'Трафик', en: 'Traffic' },
+  settings: { ru: 'Опции', en: 'Options' },
+  reachability: { ru: 'Сайты', en: 'Sites' },
+}
+
 export function Sidebar({ orientation }: { orientation: 'left' | 'top' }) {
-  const { activeTab, setActiveTab, lang, layoutWide, resolvedDark } = useApp()
+  const { activeTab, setActiveTab, lang, resolvedDark } = useApp()
   const isTop = orientation === 'top'
 
   return (
     <nav
       className={
         isTop
-          ? 'flex w-full shrink-0 flex-nowrap items-center justify-center gap-1 overflow-x-auto overflow-y-hidden border-b border-neutral-200 bg-neutral-50/95 px-2 py-2.5 dark:border-neutral-800 dark:bg-neutral-950/90'
+          ? 'flex w-full shrink-0 flex-nowrap items-center justify-around gap-0.5 overflow-x-auto overflow-y-hidden border-b border-neutral-200 bg-neutral-50/95 px-1 py-1 dark:border-neutral-800 dark:bg-neutral-950/90'
           : 'flex w-[76px] shrink-0 flex-col items-center gap-1.5 overflow-y-auto overflow-x-hidden border-r border-neutral-200 bg-neutral-50/95 px-1 py-3 dark:border-neutral-800 dark:bg-neutral-950/90'
       }
       aria-label="Navigation"
@@ -39,7 +47,7 @@ export function Sidebar({ orientation }: { orientation: 'left' | 'top' }) {
             onClick={() => setActiveTab(id)}
             className={
               (isTop
-                ? 'min-w-[52px] shrink-0 flex-col px-2.5 py-2'
+                ? 'min-w-[60px] flex-1 flex-col px-1 py-1'
                 : 'flex w-full flex-col items-center justify-center px-1 py-2.5') +
               ' flex items-center justify-center rounded-xl transition-colors ' +
               (on
@@ -47,12 +55,12 @@ export function Sidebar({ orientation }: { orientation: 'left' | 'top' }) {
                 : 'hover:bg-neutral-200/90 dark:hover:bg-neutral-800/90')
             }
           >
-            <span className="flex h-11 w-11 items-center justify-center">
+            <span className="flex h-7 w-7 items-center justify-center">
               <img
                 src={src}
                 alt=""
                 className={
-                  (isTop ? 'h-9 w-9' : 'h-10 w-10') +
+                  (isTop ? 'h-6 w-6' : 'h-10 w-10') +
                   ' max-h-10 max-w-10 ' +
                   iconTone +
                   (on
@@ -66,9 +74,9 @@ export function Sidebar({ orientation }: { orientation: 'left' | 'top' }) {
                 draggable={false}
               />
             </span>
-            {layoutWide && isTop && (
-              <span className="mt-1 whitespace-nowrap text-center text-xs font-semibold leading-tight text-neutral-700 dark:text-neutral-200">
-                {t(lang, id)}
+            {isTop && (
+              <span className="mt-0.5 w-full truncate whitespace-nowrap text-center text-[10px] font-semibold leading-tight text-neutral-700 dark:text-neutral-200">
+                <span className="sm:hidden">{shortLabels[id][lang]}</span><span className="hidden sm:inline">{t(lang, id)}</span>
               </span>
             )}
           </button>

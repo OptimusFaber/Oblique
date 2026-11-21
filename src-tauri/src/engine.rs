@@ -47,11 +47,13 @@ pub struct Engine {
 }
 impl Engine {
     pub fn new(snapshot: PathBuf) -> Self { Self { child:None,guard:None, logs:Arc::new(Mutex::new(VecDeque::new())),token:String::new(),api_port:0,mixed_port:17890,snapshot,last_error:String::new(),stop_file:None,online:false } }
+    pub fn set_recovery_error(&mut self, error:String) { self.last_error=format!("Proxy recovery failed: {error}"); }
     pub fn stop(&mut self) -> Result<(),String> {
         self.online=false;
         if let Some(mut g)=self.guard.take() { let _=g.kill(); let _=g.wait(); }
-        // Restore the desktop settings before taking away its proxy.
-        let restored=proxy::restore(&self.snapshot);
+        // TUN does not change desktop proxy settings; only an existing snapshot
+        // means there are desktop settings to restore.
+        let recovery_error=if self.snapshot.exists() { proxy::restore(&self.snapshot).err() } else { None };
         if let Some(mut c)=self.child.take() {
             if let Some(path)=&self.stop_file { let _=fs::write(path,b"stop"); }
             #[cfg(unix)] unsafe { libc::kill(c.id() as i32, libc::SIGTERM); }
@@ -62,7 +64,9 @@ impl Engine {
         }
         if let Some(path)=self.stop_file.take(){let _=fs::remove_file(path);}
         let _=fs::remove_file(self.snapshot.with_file_name("run.json"));
-        restored
+        self.last_error.clear();
+        if let Some(error)=recovery_error { self.last_error=format!("Proxy recovery failed: {error}"); return Err(self.last_error.clone()); }
+        Ok(())
     }
     pub fn poll(&mut self) -> Result<(),String> {
         if let Some(c)=self.child.as_mut() {
@@ -70,10 +74,9 @@ impl Engine {
                 self.last_error=format!("VPN core exited ({status}). {}", self.tail());
                 self.child=None; self.online=false;
                 if let Some(mut g)=self.guard.take(){let _=g.kill();let _=g.wait();}
-                let restored=proxy::restore(&self.snapshot);
                 if let Some(path)=self.stop_file.take(){let _=fs::remove_file(path);}
                 let _=fs::remove_file(self.snapshot.with_file_name("run.json"));
-                restored?;
+                if let Err(error)=proxy::restore(&self.snapshot) { self.last_error=format!("{}; proxy recovery failed: {error}",self.last_error); }
             }
         }
         Ok(())

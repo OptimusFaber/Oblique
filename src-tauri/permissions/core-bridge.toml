@@ -1,9 +1,9 @@
 [[permission]]
 identifier = "allow-core-bridge"
-description = "Start/stop the bundled silentguard_core (sing-box) process and report core path."
+description = "Control the bundled Oblique core, window mode and server country lookup."
 commands.allow = [
   "core_start",
   "core_stop",
   "core_hint",
-  "tcp_ping_ms", "core_status", "core_logs", "core_delay", "core_select", "core_probe", "fetch_subscription"
+  "tcp_ping_ms", "core_status", "core_logs", "core_delay", "core_select", "core_probe", "fetch_subscription", "set_window_mode", "detect_country"
 ]

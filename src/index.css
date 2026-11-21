@@ -21,3 +21,11 @@ body {
 #root {
   overflow: hidden;
 }
+
+/* Keep wheel, touch and keyboard scrolling without heavy system scroll tracks. */
+* {
+  scrollbar-width: none;
+}
+*::-webkit-scrollbar {
+  display: none;
+}

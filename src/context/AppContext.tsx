@@ -3,7 +3,7 @@ import { createContext, useCallback, useContext, useEffect, useRef, useState, ty
 import type { ActiveVpnFlow, AdvancedAppSettings, ConfigRule, Lang, OutboundProfile, ReachSiteRow, RuleMode, RoutingScene, Server, ServerGroup, TabId, ThemeChoice, TransportMode } from '../types'
 import { chooseFailover } from '../core/failover'
 import { buildMainOutbound, buildSingBoxConfigJson, serverTag } from '../core/buildSingBoxConfig'
-import { coreCall, tauriStartCore, tauriStopCore, tauriTcpPingMs } from '../lib/tauriCore'
+import { coreCall, setNativeWindowMode, tauriDetectCountry, tauriStartCore, tauriStopCore, tauriTcpPingMs } from '../lib/tauriCore'
 import { isDesktopApp } from '../lib/runtime'
 import { normalizeServer } from '../utils/parseServer'
 
@@ -49,10 +49,12 @@ function useAppValue() {
   const testGeneration = useRef(0)
   const [connectedSince, setConnectedSince] = useState<number | null>(null)
   const [connectNotice, setConnectNotice] = useState('')
+  const [connectError, setConnectError] = useState(false)
   const [logs, setLogs] = useState<string[]>([])
   const [activeVpnFlows, setActiveVpnFlows] = useState<ActiveVpnFlow[]>([])
   const [traffic, setTraffic] = useState({ download: 0, upload: 0, totalDownload: 0, totalUpload: 0 })
   const [layoutWide, setLayoutWide] = useState(window.innerWidth >= 780)
+  const [compactWindow, setCompactWindow] = useSaved('compact_window', false)
   const [systemDark, setSystemDark] = useState(window.matchMedia('(prefers-color-scheme: dark)').matches)
   const latch = useRef(false)
   const connectedRef = useRef(false)
@@ -61,6 +63,7 @@ function useAppValue() {
   const primary = useRef<string | null>(null)
   const current = useRef<string | null>(null)
   const loadedIds = useRef(new Set<string>())
+  const countryLookups = useRef(new Set<string>())
   const previousTotals = useRef({ down: 0, up: 0, at: Date.now() })
   const resolvedDark = theme === 'dark' || theme === 'system' && systemDark
   const redact = useCallback((line: string) => {
@@ -70,7 +73,7 @@ function useAppValue() {
   const pushLog = useCallback((line: string) => {
     line = redact(line)
     if (logsEnabled) setLogs(p => [`[${new Date().toLocaleTimeString()}] ${line}`, ...p].slice(0, maxLogLines))
-  }, [logsEnabled, maxLogLines])
+  }, [logsEnabled, maxLogLines, redact])
   const reset = useCallback(() => {
     connectedRef.current = false; setConnected(false); setConnectedSince(null); setActiveVpnFlows([])
     setTraffic({ download: 0, upload: 0, totalDownload: 0, totalUpload: 0 }); loadedIds.current.clear()
@@ -82,6 +85,28 @@ function useAppValue() {
     window.addEventListener('resize', resize); mq.addEventListener('change', change)
     return () => { window.removeEventListener('resize', resize); mq.removeEventListener('change', change) }
   }, [])
+  useEffect(() => { if (isDesktopApp()) void setNativeWindowMode(compactWindow).catch(e => pushLog('Window mode: ' + String(e))) }, [compactWindow, pushLog])
+  useEffect(() => {
+    if (!isDesktopApp()) return
+    void coreCall<{ running: boolean; error?: string }>('core_status').then(status => {
+      if (!status.running && status.error?.startsWith('Proxy recovery failed:')) {
+        setConnectNotice(status.error)
+        setConnectError(true)
+      }
+    }).catch(() => undefined)
+  }, [])
+  useEffect(() => {
+    if (!isDesktopApp()) return
+    let cancelled = false
+    for (const srv of servers) {
+      if (srv.countryCode || countryLookups.current.has(srv.host)) continue
+      countryLookups.current.add(srv.host)
+      void tauriDetectCountry(srv.host).then(code => {
+        if (!cancelled && code) setServers(current => current.map(s => s.id === srv.id && !s.countryCode ? { ...s, countryCode: code } : s))
+      }).catch(() => undefined)
+    }
+    return () => { cancelled = true }
+  }, [servers, setServers])
   useEffect(() => { document.documentElement.classList.toggle('dark', resolvedDark) }, [resolvedDark])
   useEffect(() => { if (!activeServerId && servers.length) setActive(servers[0].id) }, [activeServerId, servers, setActive])
 
@@ -94,11 +119,12 @@ function useAppValue() {
     const built = buildSingBoxConfigJson(srv, transport, { ...defaults, ...advanced }, rules, pool)
     if (built.ok === false) throw new Error(built.error)
     setConnectNotice('Проверяем VPN-подключение… / Checking VPN connection…')
+    setConnectError(false)
     await tauriStartCore(built.json, transport === 'proxy', advanced.bypassLan)
     loadedIds.current = new Set([srv.id, ...pool.map(s => s.id)])
     previousTotals.current = { down: 0, up: 0, at: Date.now() }
     primary.current = preferredId; current.current = srv.id; setActive(srv.id)
-    connectedRef.current = true; setConnected(true); setConnectedSince(Date.now()); setConnectNotice('')
+    connectedRef.current = true; setConnected(true); setConnectedSince(Date.now()); setConnectNotice(''); setConnectError(false)
     pushLog('VPN connected: ' + srv.tag)
   }
   const toggleConnect = async () => {
@@ -106,7 +132,7 @@ function useAppValue() {
     testGeneration.current += 1; testingRef.current = false; setTesting(false)
     latch.current = true; setBusy(true)
     try {
-      if (connectedRef.current) { await tauriStopCore(); reset(); setConnectNotice(''); pushLog('Disconnected') }
+      if (connectedRef.current) { await tauriStopCore(); reset(); setConnectNotice(''); setConnectError(false); pushLog('Disconnected') }
       else {
         const s = servers.find(s => s.id === activeServerId) || servers[0]
         if (!s) throw new Error('Добавьте VPN-профиль / Add a VPN profile')
@@ -120,7 +146,7 @@ function useAppValue() {
         }
         if (!ready) throw lastError
       }
-    } catch (e) { reset(); setConnectNotice(redact(String(e))); pushLog(String(e)) }
+    } catch (e) { reset(); setConnectNotice(redact(String(e))); setConnectError(true); pushLog(String(e)) }
     finally { latch.current = false; setBusy(false) }
   }
   const setActiveServer = async (id: string) => {
@@ -145,7 +171,7 @@ function useAppValue() {
       try {
         const s = await coreCall<{ running: boolean; error?: string; data?: { downloadTotal: number; uploadTotal: number; connections?: { id: string; metadata: { host?: string; destinationIP?: string; destinationPort?: string; process?: string; processPath?: string; network?: string; type?: string }; chains?: string[]; download: number; upload: number; start: string }[] } }>('core_status')
         if (cancelled) return
-        if (!s.running) { reset(); setConnectNotice(s.error || 'VPN core stopped'); return }
+        if (!s.running) { reset(); setConnectNotice(s.error || 'VPN core stopped'); setConnectError(true); return }
         failures = 0
         const d = s.data!
         const now = Date.now(), prev = previousTotals.current, seconds = Math.max((now - prev.at) / 1000, .1)
@@ -159,7 +185,7 @@ function useAppValue() {
       } catch (e) {
         if (!cancelled && ++failures >= 3) {
           try { await tauriStopCore() } catch (stopError) { pushLog(String(stopError)) }
-          reset(); setConnectNotice('Потеряна связь с ядром / Core unavailable: ' + String(e)); return
+          reset(); setConnectNotice('Потеряна связь с ядром / Core unavailable: ' + String(e)); setConnectError(true); return
         }
       }
       if (!cancelled) timer = setTimeout(poll, 1000)
@@ -239,8 +265,8 @@ function useAppValue() {
   }
   const liveOutbound: OutboundProfile | null = connected ? { tag: servers.find(s => s.id === activeServerId)?.tag || '', app_transport: transport } : null
   return {
-    version: '2.1.0', theme, setTheme, lang, setLang, transport, setTransport: (v: TransportMode) => { if (editable()) setTransportState(v) },
-    servers, activeServerId, activeTab, setActiveTab, connected, busy, testing, connectedSince, connectNotice, setConnectNotice,
+    version: '2.1.0', theme, setTheme, lang, setLang, transport, setTransport: (v: TransportMode) => { if (editable()) setTransportState(v) }, compactWindow, setCompactWindow: (v: boolean) => setCompactWindow(v),
+    servers, activeServerId, activeTab, setActiveTab, connected, busy, testing, connectedSince, connectNotice, setConnectNotice, connectError,
     layoutWide, resolvedDark, rules, logs, pushLog, liveOutbound, activeVpnFlows, traffic, serverGroups, routingScenes, activeGroupId,
     setActiveGroup: (id: string | null) => { if (editable()) { setGroup(id); const group = serverGroups.find(g => g.id === id); if (group && !group.memberServerIds.includes(activeServerId || '')) setActive(group.memberServerIds[0] || null) } },
     advanced: { ...defaults, ...advanced }, setAdvanced: (patch: Partial<AdvancedAppSettings>) => { if (editable()) setAdvancedState(a => ({ ...defaults, ...a, ...patch })) },
