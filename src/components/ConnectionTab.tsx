@@ -4,7 +4,7 @@ import { useApp } from '../context/AppContext'
 import { t } from '../i18n'
 import { SG_ASSETS, SG_UI_ICONS } from '../lib/sgAssets'
 import type { Server } from '../types'
-import { countryCodeToFlagEmoji } from '../utils/countryFlags'
+import { countryFlagAsset } from '../utils/countryFlags'
 import { ServerEditorModal } from './ServerEditorModal'
 
 function formatSessionClock(ms: number) {
@@ -114,10 +114,10 @@ export function ConnectionTab() {
             ))}
           </div>
         </div>
-        <p className="text-right text-[11px] leading-snug text-neutral-500 dark:text-neutral-400">
+        <p className="line-clamp-2 flex h-8 shrink-0 items-center justify-center px-2 text-center text-[11px] leading-4 text-neutral-500 dark:text-neutral-400">
           {transport === 'proxy'
-            ? (lang === 'ru' ? 'Прокси для приложений, использующих настройки системы' : 'Proxy for apps using system proxy settings')
-            : (lang === 'ru' ? 'TUN направляет системный трафик через VPN' : 'TUN routes system traffic through VPN')}
+            ? (lang === 'ru' ? 'Прокси для приложений' : 'Proxy for apps using system proxy')
+            : (lang === 'ru' ? 'Весь трафик системы через VPN' : 'All device traffic through VPN')}
         </p>
 
         <div className="flex flex-col items-center gap-2 px-1">
@@ -126,7 +126,7 @@ export function ConnectionTab() {
             disabled={busy} onClick={() => void toggleConnect()}
             className={
               'flex h-[8.5rem] w-[8.5rem] max-w-[min(8.5rem,calc(100vw-4rem))] shrink-0 items-center justify-center rounded-[1.8rem] border-2 bg-transparent transition-all duration-300 ' +
-              (visualState === 'connected' ? 'border-cyan-300 shadow-[0_0_22px_4px_rgba(34,211,238,.48),inset_0_0_18px_rgba(56,189,248,.22)]' : visualState === 'error' ? 'border-orange-500 shadow-[0_0_20px_3px_rgba(239,68,68,.45)]' : 'border-slate-700 hover:border-sky-400 hover:shadow-[0_0_16px_rgba(56,189,248,.2)]')
+              (visualState === 'connected' ? 'border-sky-300 shadow-[0_0_22px_4px_rgba(56,189,248,.4),inset_0_0_18px_rgba(56,189,248,.2)] dark:border-orange-400 dark:shadow-[0_0_22px_4px_rgba(251,146,60,.4),inset_0_0_18px_rgba(251,146,60,.2)]' : visualState === 'error' ? 'border-orange-500 shadow-[0_0_20px_3px_rgba(239,68,68,.45)]' : 'border-neutral-300 hover:border-sky-400 hover:shadow-[0_0_16px_rgba(56,189,248,.2)] dark:border-neutral-700 dark:hover:border-orange-400 dark:hover:shadow-[0_0_16px_rgba(251,146,60,.2)]')
             }
             aria-pressed={connected}
             aria-label={connected ? (lang === 'ru' ? 'Отключить VPN' : 'Disconnect VPN') : (lang === 'ru' ? 'Подключить VPN' : 'Connect VPN')}
@@ -136,29 +136,33 @@ export function ConnectionTab() {
               alt=""
               className={
                 'h-[8rem] w-[8rem] max-h-[min(8rem,calc(100vw-4.5rem))] max-w-[min(8rem,calc(100vw-4.5rem))] object-contain transition-all duration-300 ' +
-                (visualState === 'connected' ? '[filter:drop-shadow(0_0_13px_rgba(56,189,248,.95))]' : visualState === 'error' ? '[filter:drop-shadow(0_0_12px_rgba(249,115,22,.9))]' : 'opacity-90')
+                (visualState === 'connected' ? '[filter:drop-shadow(0_0_13px_rgba(56,189,248,.95))] dark:[filter:drop-shadow(0_0_13px_rgba(251,146,60,.95))]' : visualState === 'error' ? '[filter:drop-shadow(0_0_12px_rgba(249,115,22,.9))]' : 'opacity-90')
               }
               draggable={false}
             />
           </button>
           <span
             className={
-              'text-center text-sm font-semibold leading-snug ' +
-              (connected ? 'text-sky-600 dark:text-cyan-300' : connectError ? 'text-orange-600 dark:text-orange-400' : 'text-neutral-500 dark:text-neutral-400')
+              'flex h-5 shrink-0 items-center justify-center text-center text-sm font-semibold leading-5 ' +
+              (connected ? 'text-sky-600 dark:text-orange-300' : connectError ? 'text-orange-600 dark:text-orange-400' : 'text-neutral-500 dark:text-neutral-400')
             }
           >
             {busy ? (lang === 'ru' ? 'Подключаем…' : 'Connecting…') : connected ? t(lang, 'connected') : connectError ? (lang === 'ru' ? 'Ошибка подключения' : 'Connection failed') : t(lang, 'notConnected')}
           </span>
-          <span className="text-center text-xs text-neutral-500 dark:text-neutral-400">{connected ? (lang === 'ru' ? 'Нажмите, чтобы отключить' : 'Click to disconnect') : (lang === 'ru' ? 'Нажмите, чтобы подключить' : 'Click to connect')}</span>
-          {connectNotice ? (
-            <p
-              role="status"
-              className={'max-w-[min(24rem,100%)] text-center text-xs font-medium ' + (connectError ? 'text-orange-700 dark:text-orange-300' : 'text-neutral-600 dark:text-neutral-300')}
-            >
-              {connectNotice}
-            </p>
-          ) : null}
+          <span className="h-4 shrink-0 truncate text-center text-xs leading-4 text-neutral-500 dark:text-neutral-400">{connected ? (lang === 'ru' ? 'Нажмите, чтобы отключить' : 'Click to disconnect') : (lang === 'ru' ? 'Нажмите, чтобы подключить' : 'Click to connect')}</span>
         </div>
+      </div>
+
+      <div className="flex h-9 shrink-0 items-center justify-center px-1" aria-live="polite">
+        {connectNotice ? (
+          <p
+            role="status"
+            title={connectNotice}
+            className={'line-clamp-2 max-h-9 max-w-[min(32rem,100%)] overflow-hidden text-center text-xs font-medium leading-4 ' + (connectError ? 'text-orange-700 dark:text-orange-300' : 'text-neutral-600 dark:text-neutral-300')}
+          >
+            {connectNotice}
+          </p>
+        ) : null}
       </div>
 
       <div className="flex shrink-0 items-center justify-center gap-2 text-center">
@@ -171,11 +175,13 @@ export function ConnectionTab() {
         </span>
       </div>
 
-      {connected && liveOutbound && selectedServer && <div className="shrink-0 rounded-xl border border-neutral-200 bg-neutral-50 px-3 py-2 dark:border-neutral-800 dark:bg-neutral-900/60">
-        <p className="text-[10px] font-semibold uppercase tracking-wide text-neutral-500 dark:text-neutral-400">{t(lang, 'activeProfile')}</p>
-        <p className="truncate text-sm font-semibold">{selectedServer.tag}</p>
-        <p className="truncate font-mono text-[11px] text-neutral-500">{selectedServer.host}:{selectedServer.port}</p>
-      </div>}
+      <div className={'flex h-[4.5rem] shrink-0 flex-col justify-center rounded-xl border border-neutral-200 px-3 py-2 dark:border-neutral-800 ' + (selectedServer ? 'bg-neutral-50 dark:bg-neutral-900/60' : 'invisible')} aria-hidden={!selectedServer}>
+        {selectedServer ? <>
+          <p className="text-[10px] font-semibold uppercase tracking-wide text-neutral-500 dark:text-neutral-400">{connected && liveOutbound ? t(lang, 'activeProfile') : t(lang, 'selectedProfile')}</p>
+          <p className="truncate text-sm font-semibold">{selectedServer.tag}</p>
+          <p className="truncate font-mono text-[11px] text-neutral-500">{selectedServer.host}:{selectedServer.port}</p>
+        </> : null}
+      </div>
 
       <div className="flex shrink-0 items-center justify-between gap-3">
         <h3 className="min-w-0 truncate text-sm font-bold text-neutral-800 dark:text-neutral-100">
@@ -205,21 +211,24 @@ export function ConnectionTab() {
             <ul className="divide-y divide-neutral-200 dark:divide-neutral-800">
               {visibleServers.map((s) => {
                 const active = s.id === activeServerId
-                return <li key={s.id} className={'p-3 ' + (active ? 'bg-sky-50/90 dark:bg-sky-950/25' : 'bg-white dark:bg-neutral-950/50')}>
-                  <div className="flex min-w-0 flex-wrap items-center gap-2">
-                    <button type="button" onClick={() => setActiveServer(s.id)} aria-label={t(lang, 'active')} aria-pressed={active} className={'flex h-7 w-7 shrink-0 items-center justify-center rounded-full border-2 ' + (active ? 'border-cyan-400 bg-sky-600' : 'border-neutral-300 dark:border-neutral-600')}>
-                      {active && <span className="h-2 w-2 rounded-full bg-white" />}
+                const flag = s.countryCode ? countryFlagAsset(s.countryCode) : null
+                return <li key={s.id} className={'px-2 py-1.5 ' + (active ? 'bg-sky-50/90 dark:bg-orange-950/25' : 'bg-white dark:bg-neutral-950/50')}>
+                  <div className="flex min-w-0 items-center gap-1.5">
+                    <button type="button" onClick={() => setActiveServer(s.id)} aria-label={t(lang, 'active')} aria-pressed={active} className={'flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 ' + (active ? 'border-sky-500 bg-sky-600 dark:border-orange-400 dark:bg-orange-600' : 'border-neutral-300 dark:border-neutral-600')}>
+                      {active && <span className="h-1.5 w-1.5 rounded-full bg-white" />}
                     </button>
-                    <span className="shrink-0 text-xl" title={s.countryCode || (lang === 'ru' ? 'Страна неизвестна' : 'Country unknown')}>{s.countryCode ? countryCodeToFlagEmoji(s.countryCode) : '🌐'}</span>
-                    <div className="min-w-0 flex-1 basis-[calc(100%-5rem)]">
-                      <div className="truncate text-sm font-semibold">{s.tag}</div>
-                      <div className="truncate font-mono text-[11px] text-neutral-500 dark:text-neutral-400">{s.host}:{s.port} · {s.serverType.toUpperCase()}</div>
-                    </div>
-                    <div className="ml-auto shrink-0 text-right font-mono text-xs text-neutral-500">{s.latencyMs != null ? `${s.latencyMs} ms` : '—'}</div>
-                  </div>
-                  <div className="mt-2 flex justify-end gap-2">
-                    <button type="button" onClick={() => openEdit(s)} className="rounded-lg border border-neutral-200 px-3 py-1 text-xs font-semibold dark:border-neutral-700">{t(lang, 'edit')}</button>
-                    <button type="button" onClick={() => { if (window.confirm(t(lang, 'deleteServerConfirm'))) removeServer(s.id) }} className="rounded-lg border border-red-200 px-3 py-1 text-xs font-semibold text-red-700 dark:border-red-900 dark:text-red-300">{t(lang, 'delete')}</button>
+                    {flag ? <img src={flag} alt={s.countryCode} title={s.countryCode} className="h-3.5 w-5 shrink-0 rounded-[2px] object-cover shadow-sm" draggable={false} /> : <span className="flex h-3.5 w-5 shrink-0 items-center justify-center text-xs" title={lang === 'ru' ? 'Страна неизвестна' : 'Country unknown'}>🌐</span>}
+                    <button type="button" onClick={() => setActiveServer(s.id)} aria-pressed={active} className="min-w-0 flex-1 text-left">
+                      <span className="block truncate text-xs font-semibold leading-4">{s.tag}</span>
+                      <span className="block truncate font-mono text-[10px] leading-3 text-neutral-500 dark:text-neutral-400">{s.host}:{s.port} · {s.serverType.toUpperCase()}</span>
+                    </button>
+                    <div className="w-10 shrink-0 text-right font-mono text-[10px] text-neutral-500 dark:text-neutral-400">{s.latencyMs != null ? `${s.latencyMs} ms` : '—'}</div>
+                    <button type="button" onClick={() => openEdit(s)} aria-label={t(lang, 'edit')} title={t(lang, 'edit')} className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md text-neutral-500 hover:bg-sky-50 hover:text-sky-700 dark:text-neutral-400 dark:hover:bg-orange-950 dark:hover:text-orange-300">
+                      <svg viewBox="0 0 20 20" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="1.6" aria-hidden="true"><path d="m13.8 3.2 3 3M4 16l3.4-.7L16 6.7a2.1 2.1 0 0 0-3-3l-8.6 8.6L4 16Z"/><path d="M11.7 4.3 15 7.6"/></svg>
+                    </button>
+                    <button type="button" onClick={() => { if (window.confirm(t(lang, 'deleteServerConfirm'))) removeServer(s.id) }} aria-label={t(lang, 'delete')} title={t(lang, 'delete')} className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md text-neutral-500 hover:bg-red-50 hover:text-red-700 dark:text-neutral-400 dark:hover:bg-red-950/50 dark:hover:text-red-300">
+                      <svg viewBox="0 0 20 20" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="1.6" aria-hidden="true"><path d="M4.5 6h11M8 6V4h4v2m2.5 0-.7 10h-7L6.1 6m2.4 3v4m3-4v4"/></svg>
+                    </button>
                   </div>
                 </li>
               })}
@@ -228,7 +237,7 @@ export function ConnectionTab() {
           <button
             type="button"
             onClick={openAdd}
-            className="flex h-11 w-full shrink-0 items-center justify-center rounded-xl bg-neutral-900 text-sm font-bold text-white dark:bg-gradient-to-r dark:from-sky-700 dark:to-cyan-700 dark:text-white"
+            className="flex h-11 w-full shrink-0 items-center justify-center rounded-xl bg-sky-600 text-sm font-bold text-white hover:bg-sky-700 dark:bg-orange-700 dark:hover:bg-orange-600"
           >
             {lang === 'ru' ? '+ Добавить сервер' : '+ Add server'}
           </button>

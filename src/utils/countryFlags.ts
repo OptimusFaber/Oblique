@@ -6,6 +6,19 @@ export function countryCodeToFlagEmoji(code: string): string {
   return String.fromCodePoint(A + c.charCodeAt(0) - 65, A + c.charCodeAt(1) - 65)
 }
 
+const flagAssets = import.meta.glob('../assets/flags/*.svg', {
+  eager: true,
+  query: '?url',
+  import: 'default',
+}) as Record<string, string>
+
+/** Return a bundled, offline flag image for a two-letter country code. */
+export function countryFlagAsset(code: string): string | null {
+  const normalized = code.trim().toLowerCase()
+  if (!/^[a-z]{2}$/.test(normalized)) return null
+  return flagAssets[`../assets/flags/${normalized}.svg`] ?? null
+}
+
 export const COMMON_COUNTRY_OPTIONS: { code: string; en: string; ru: string }[] = [
   { code: 'US', en: 'United States', ru: 'США' },
   { code: 'GB', en: 'United Kingdom', ru: 'Великобритания' },

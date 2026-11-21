@@ -37,7 +37,7 @@ function statusClass(s: ReachStatus): string {
     case 'error':
       return 'text-orange-700 dark:text-orange-400'
     case 'checking':
-      return 'text-sky-600 dark:text-sky-400 animate-pulse'
+      return 'text-sky-600 dark:text-orange-400 animate-pulse'
     default:
       return 'text-neutral-500 dark:text-neutral-400'
   }
@@ -80,7 +80,7 @@ export function ReachabilityTab() {
         />
         <button
           type="button"
-          className="rounded-xl bg-sky-500 px-3 py-2 text-sm font-semibold text-white dark:bg-gradient-to-r dark:from-orange-600 dark:to-red-600"
+          className="rounded-xl bg-sky-600 px-3 py-2 text-sm font-semibold text-white hover:bg-sky-700 dark:bg-orange-700 dark:hover:bg-orange-600"
           onClick={() => {
             addReachSite(draft)
             setDraft('')
@@ -146,7 +146,7 @@ export function ReachabilityTab() {
                   <td className="px-2 py-2 align-top text-right">
                     <button
                       type="button"
-                      className="mr-1 text-sky-600 hover:underline dark:text-sky-400"
+                      className="mr-1 text-sky-600 hover:underline dark:text-orange-400"
                       onClick={() => checkReachSite(row.id)}
                     >
                       {t(lang, 'reachRecheck')}

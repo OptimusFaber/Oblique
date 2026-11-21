@@ -101,7 +101,7 @@ export function ConfigsTab() {
         </div>
         <button
           type="button"
-          className="mt-3 w-full rounded-lg bg-neutral-900 py-2 text-sm font-semibold text-white dark:bg-gradient-to-r dark:from-orange-700 dark:to-red-700"
+          className="mt-3 w-full rounded-lg bg-sky-600 py-2 text-sm font-semibold text-white hover:bg-sky-700 dark:bg-orange-700 dark:hover:bg-orange-600"
           onClick={commitGroup}
         >
           {t(lang, 'groupCreate')}
@@ -180,7 +180,7 @@ export function ConfigsTab() {
             addRule(pattern.trim(), mode)
             setPattern('')
           }}
-          className="rounded-xl bg-sky-500 px-4 py-2 text-sm font-semibold text-white dark:bg-gradient-to-r dark:from-orange-600 dark:to-red-600 dark:text-white"
+          className="rounded-xl bg-sky-600 px-4 py-2 text-sm font-semibold text-white hover:bg-sky-700 dark:bg-orange-700 dark:hover:bg-orange-600"
         >
           {t(lang, 'addRule')}
         </button>

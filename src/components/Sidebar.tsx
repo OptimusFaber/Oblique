@@ -51,7 +51,7 @@ export function Sidebar({ orientation }: { orientation: 'left' | 'top' }) {
                 : 'flex w-full flex-col items-center justify-center px-1 py-2.5') +
               ' flex items-center justify-center rounded-xl transition-colors ' +
               (on
-                ? 'bg-sky-500/15 dark:bg-gradient-to-br dark:from-orange-600/25 dark:to-red-900/25'
+                ? 'bg-sky-500/15 dark:bg-orange-500/15'
                 : 'hover:bg-neutral-200/90 dark:hover:bg-neutral-800/90')
             }
           >
