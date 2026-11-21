@@ -125,17 +125,17 @@ export function ConnectionTab() {
             type="button"
             disabled={busy} onClick={() => void toggleConnect()}
             className={
-              'flex h-[8.5rem] w-[8.5rem] max-w-[min(8.5rem,calc(100vw-4rem))] shrink-0 items-center justify-center rounded-[1.8rem] border-2 bg-[#0b172b] transition-all duration-300 ' +
+              'flex h-[8.5rem] w-[8.5rem] max-w-[min(8.5rem,calc(100vw-4rem))] shrink-0 items-center justify-center rounded-[1.8rem] border-2 bg-transparent transition-all duration-300 ' +
               (visualState === 'connected' ? 'border-cyan-300 shadow-[0_0_22px_4px_rgba(34,211,238,.48),inset_0_0_18px_rgba(56,189,248,.22)]' : visualState === 'error' ? 'border-orange-500 shadow-[0_0_20px_3px_rgba(239,68,68,.45)]' : 'border-slate-700 hover:border-sky-400 hover:shadow-[0_0_16px_rgba(56,189,248,.2)]')
             }
             aria-pressed={connected}
             aria-label={connected ? (lang === 'ru' ? 'Отключить VPN' : 'Disconnect VPN') : (lang === 'ru' ? 'Подключить VPN' : 'Connect VPN')}
           >
             <img
-              src={SG_ASSETS.logo}
+              src={resolvedDark ? SG_ASSETS.logo.dark : SG_ASSETS.logo.light}
               alt=""
               className={
-                'h-[7rem] w-[7rem] max-h-[min(7rem,calc(100vw-5rem))] max-w-[min(7rem,calc(100vw-5rem))] object-contain transition-all duration-300 ' +
+                'h-[8rem] w-[8rem] max-h-[min(8rem,calc(100vw-4.5rem))] max-w-[min(8rem,calc(100vw-4.5rem))] object-contain transition-all duration-300 ' +
                 (visualState === 'connected' ? '[filter:drop-shadow(0_0_13px_rgba(56,189,248,.95))]' : visualState === 'error' ? '[filter:drop-shadow(0_0_12px_rgba(249,115,22,.9))]' : 'opacity-90')
               }
               draggable={false}
@@ -206,16 +206,16 @@ export function ConnectionTab() {
               {visibleServers.map((s) => {
                 const active = s.id === activeServerId
                 return <li key={s.id} className={'p-3 ' + (active ? 'bg-sky-50/90 dark:bg-sky-950/25' : 'bg-white dark:bg-neutral-950/50')}>
-                  <div className="flex min-w-0 items-center gap-2">
+                  <div className="flex min-w-0 flex-wrap items-center gap-2">
                     <button type="button" onClick={() => setActiveServer(s.id)} aria-label={t(lang, 'active')} aria-pressed={active} className={'flex h-7 w-7 shrink-0 items-center justify-center rounded-full border-2 ' + (active ? 'border-cyan-400 bg-sky-600' : 'border-neutral-300 dark:border-neutral-600')}>
                       {active && <span className="h-2 w-2 rounded-full bg-white" />}
                     </button>
                     <span className="shrink-0 text-xl" title={s.countryCode || (lang === 'ru' ? 'Страна неизвестна' : 'Country unknown')}>{s.countryCode ? countryCodeToFlagEmoji(s.countryCode) : '🌐'}</span>
-                    <div className="min-w-0 flex-1">
+                    <div className="min-w-0 flex-1 basis-[calc(100%-5rem)]">
                       <div className="truncate text-sm font-semibold">{s.tag}</div>
                       <div className="truncate font-mono text-[11px] text-neutral-500 dark:text-neutral-400">{s.host}:{s.port} · {s.serverType.toUpperCase()}</div>
                     </div>
-                    <div className="shrink-0 text-right font-mono text-xs text-neutral-500">{s.latencyMs != null ? `${s.latencyMs} ms` : '—'}</div>
+                    <div className="ml-auto shrink-0 text-right font-mono text-xs text-neutral-500">{s.latencyMs != null ? `${s.latencyMs} ms` : '—'}</div>
                   </div>
                   <div className="mt-2 flex justify-end gap-2">
                     <button type="button" onClick={() => openEdit(s)} className="rounded-lg border border-neutral-200 px-3 py-1 text-xs font-semibold dark:border-neutral-700">{t(lang, 'edit')}</button>

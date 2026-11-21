@@ -31,9 +31,13 @@ fn set_window_mode(app:tauri::AppHandle,compact:bool)->Result<(),String>{
  let window=app.get_webview_window("main").ok_or("Main window is unavailable")?;
  window.unmaximize().map_err(|e|e.to_string())?;
  window.set_fullscreen(false).map_err(|e|e.to_string())?;
- window.set_min_size(Some(tauri::LogicalSize::new(if compact {360.0}else{760.0},if compact {560.0}else{560.0}))).map_err(|e|e.to_string())?;
+ let width=if compact {420.0}else{1100.0};
+ let height=760.0;
  window.set_max_size(None::<tauri::LogicalSize<f64>>).map_err(|e|e.to_string())?;
- window.set_size(tauri::LogicalSize::new(if compact {420.0}else{1100.0},if compact {760.0}else{760.0})).map_err(|e|e.to_string())
+ window.set_min_size(Some(tauri::LogicalSize::new(width,560.0))).map_err(|e|e.to_string())?;
+ window.set_size(tauri::LogicalSize::new(width,height)).map_err(|e|e.to_string())?;
+ if compact { window.set_max_size(Some(tauri::LogicalSize::new(width,10000.0))).map_err(|e|e.to_string()) }
+ else { Ok(()) }
 }
 #[tauri::command]
 async fn core_status(state:tauri::State<'_,Shared>)->Result<Value,String>{

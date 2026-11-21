@@ -3,7 +3,8 @@
  * Do not import from external folders (e.g. Desktop/images).
  */
 import favicon from '../assets/brand/oblique-white.svg'
-import logo from '../assets/brand/oblique-white.svg'
+import logoBlack from '../assets/brand/oblique-black.svg'
+import logoWhite from '../assets/brand/oblique-white.svg'
 
 import tabConnection from '../assets/brand/internet-web-browser.svg'
 import tabConfigs from '../assets/brand/network-routing.svg'
@@ -32,7 +33,7 @@ export const SG_UI_ICONS = {
 
 export const SG_ASSETS = {
   favicon,
-  logo,
+  logo: { light: logoBlack, dark: logoWhite },
   tab: {
     connection: tabConnection,
     configs: tabConfigs,

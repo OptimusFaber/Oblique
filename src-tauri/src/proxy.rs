@@ -27,7 +27,7 @@ pub fn restore(path: &Path) -> Result<(), String> {
         use std::io::Write;
         use std::process::Stdio;
         use std::os::windows::process::CommandExt;
-        let script = r#"[Console]::InputEncoding=[System.Text.UTF8Encoding]::new();$ErrorActionPreference='Stop';$s=[Console]::In.ReadToEnd()|ConvertFrom-Json;$k='HKCU:\Software\Microsoft\Windows\CurrentVersion\Internet Settings';foreach($n in @('ProxyEnable','ProxyServer','ProxyOverride','AutoConfigURL')){if($null -eq $s.$n){Remove-ItemProperty $k $n -ErrorAction SilentlyContinue}else{Set-ItemProperty $k $n $s.$n}}"#;
+        let script = r#"[Console]::InputEncoding=[System.Text.UTF8Encoding]::new();$ErrorActionPreference='Stop';$s=[Console]::In.ReadToEnd()|ConvertFrom-Json;$k='HKCU:\Software\Microsoft\Windows\CurrentVersion\Internet Settings';foreach($n in @('ProxyEnable','ProxyServer','ProxyOverride','AutoConfigURL')){$v=$s.$n;if($null -eq $v){Remove-ItemProperty -Path $k -Name $n -ErrorAction SilentlyContinue}else{Set-ItemProperty -Path $k -Name $n -Value $v -ErrorAction Stop}};$p=Get-ItemProperty -Path $k;foreach($n in @('ProxyEnable','ProxyServer','ProxyOverride','AutoConfigURL')){$expected=$s.$n;$exists=$p.PSObject.Properties.Name -contains $n;$actual=if($exists){$p.$n}else{$null};if($null -eq $expected){if($exists){throw "Proxy restore verification failed for $n (expected missing value)"}}elseif(!$exists -or [string]$actual -ne [string]$expected){throw "Proxy restore verification failed for $n"}}"#;
         let mut c = Command::new("powershell.exe").args(["-NoProfile", "-NonInteractive", "-Command", script]).creation_flags(0x08000000).stdin(Stdio::piped()).stdout(Stdio::null()).stderr(Stdio::piped()).spawn().map_err(|e|e.to_string())?;
         c.stdin.take().ok_or("stdin unavailable")?.write_all(text.as_bytes()).map_err(|e|e.to_string())?;
         let output=c.wait_with_output().map_err(|e|e.to_string())?;
@@ -54,7 +54,7 @@ fn notify_windows() {
 pub fn enable(path: &Path, port: u16, bypass_lan: bool) -> Result<(), String> {
     if path.exists() { return Err("An unrestored proxy snapshot exists. Restart Oblique to recover it.".into()); }
     #[cfg(windows)] {
-        let snapshot = run("powershell.exe", &["-NoProfile", "-NonInteractive", "-Command", r#"$ErrorActionPreference='Stop';$p=Get-ItemProperty 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Internet Settings';@{ProxyEnable=$p.ProxyEnable;ProxyServer=$p.ProxyServer;ProxyOverride=$p.ProxyOverride;AutoConfigURL=$p.AutoConfigURL}|ConvertTo-Json -Compress"#])?;
+        let snapshot = run("powershell.exe", &["-NoProfile", "-NonInteractive", "-Command", r#"$ErrorActionPreference='Stop';$k='HKCU:\Software\Microsoft\Windows\CurrentVersion\Internet Settings';$p=Get-ItemProperty $k;$s=@{};foreach($n in @('ProxyEnable','ProxyServer','ProxyOverride','AutoConfigURL')){if($p.PSObject.Properties.Name -contains $n){$s[$n]=$p.$n}else{$s[$n]=$null}};$s|ConvertTo-Json -Compress"#])?;
         fs::write(path, snapshot).map_err(|e|e.to_string())?;
         let bypass = if bypass_lan { "<local>;localhost;127.*;10.*;172.16.*;172.17.*;172.18.*;172.19.*;172.2?.*;172.30.*;172.31.*;192.168.*;[::1]" } else { "localhost;127.*;[::1]" };
         let script = format!(r#"$ErrorActionPreference='Stop';$k='HKCU:\Software\Microsoft\Windows\CurrentVersion\Internet Settings';Set-ItemProperty $k ProxyServer '127.0.0.1:{port}';Set-ItemProperty $k ProxyOverride '{bypass}';Remove-ItemProperty $k AutoConfigURL -ErrorAction SilentlyContinue;Set-ItemProperty $k ProxyEnable 1"#);
