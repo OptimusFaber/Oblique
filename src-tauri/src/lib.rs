@@ -109,7 +109,7 @@ pub fn run(){
   if let Some(e)=recovery_error {engine.set_recovery_error(e);}
   let shared=Arc::new(Mutex::new(engine));
   app.manage(shared.clone());
-  #[cfg(windows)] tray::install(app.handle())?;
+  #[cfg(windows)] if let Err(e)=tray::install(app.handle()){log::error!("Could not create Windows tray icon: {e}");}
   #[cfg(windows)] let tray_app=app.handle().clone();
   std::thread::spawn(move||loop{
    std::thread::sleep(std::time::Duration::from_secs(2));
