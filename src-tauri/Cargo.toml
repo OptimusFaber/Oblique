@@ -1,0 +1,61 @@
+[package]
+name = "oblique"
+default-run = "oblique"
+version = "2.1.0"
+description = "Oblique VPN desktop client"
+authors = ["Oblique contributors"]
+license = "GPL-3.0-only"
+repository = ""
+edition = "2021"
+rust-version = "1.90"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[lib]
+name = "app_lib"
+crate-type = ["rlib"]
+
+[build-dependencies]
+tauri-build = { version = "2.7.6", features = [] }
+
+[dependencies]
+serde_json = "1.0"
+serde = { version = "1.0", features = ["derive"] }
+log = "0.4"
+tauri = { version = "2.11.6", features = [] }
+tauri-plugin-log = "2"
+reqwest = { version = "0.12", default-features = false, features = ["blocking", "json", "rustls-tls", "socks"] }
+uuid = { version = "1", features = ["v4"] }
+tauri-plugin-single-instance = "2"
+
+[target.'cfg(unix)'.dependencies]
+libc = "0.2"
+
+[target.'cfg(windows)'.dependencies]
+windows-sys = { version = "0.61", features = ["Win32_Foundation", "Win32_System_Threading"] }
+
+[profile.release]
+opt-level = 1
+debug = 0
+strip = true
+codegen-units = 16
+
+[features]
+integration-tests = []
+
+[[bin]]
+name = "oblique"
+path = "src/main.rs"
+
+[[bin]]
+name = "oblique-engine-test"
+path = "src/engine_test.rs"
+required-features = ["integration-tests"]
+
+# These crates forward calls into native GTK/WebKit; avoid expensive optimization
+# of generated bindings on small build machines. Application code remains optimized.
+[profile.release.package.gtk]
+opt-level = 0
+
+[profile.release.package.webkit2gtk]
+opt-level = 0

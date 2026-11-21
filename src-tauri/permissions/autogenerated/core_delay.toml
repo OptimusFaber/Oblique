@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-core-delay"
+description = "Enables the core_delay command without any pre-configured scope."
+commands.allow = ["core_delay"]
+
+[[permission]]
+identifier = "deny-core-delay"
+description = "Denies the core_delay command without any pre-configured scope."
+commands.deny = ["core_delay"]

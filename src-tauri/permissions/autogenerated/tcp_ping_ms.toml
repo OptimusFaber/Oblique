@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-tcp-ping-ms"
+description = "Enables the tcp_ping_ms command without any pre-configured scope."
+commands.allow = ["tcp_ping_ms"]
+
+[[permission]]
+identifier = "deny-tcp-ping-ms"
+description = "Denies the tcp_ping_ms command without any pre-configured scope."
+commands.deny = ["tcp_ping_ms"]

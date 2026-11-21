@@ -1,0 +1,9 @@
+[[permission]]
+identifier = "allow-core-bridge"
+description = "Start/stop the bundled silentguard_core (sing-box) process and report core path."
+commands.allow = [
+  "core_start",
+  "core_stop",
+  "core_hint",
+  "tcp_ping_ms", "core_status", "core_logs", "core_delay", "core_select", "core_probe", "fetch_subscription"
+]

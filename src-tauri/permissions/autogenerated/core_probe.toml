@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-core-probe"
+description = "Enables the core_probe command without any pre-configured scope."
+commands.allow = ["core_probe"]
+
+[[permission]]
+identifier = "deny-core-probe"
+description = "Denies the core_probe command without any pre-configured scope."
+commands.deny = ["core_probe"]
